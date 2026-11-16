@@ -1,0 +1,33 @@
+groups:
+  - name: service_rules
+    rules:
+      - alert: service_down
+        expr: up == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations:
+          summary: "Instance {{ $labels.instance }} down"
+      - alert: sensor_down
+        expr: redfish_exporter_SensorHealth == 0
+        for: 1m
+        labels: {severity: critical}
+        annotations:
+          summary: "Temperature/PSU sensor {{ $labels.sensor }} is not working"
+      - alert: fan_down
+        expr: redfish_exporter_FanStatus == 0
+        for: 1m
+        labels: {severity: warning}
+        annotations:
+          summary: "Fan {{ $labels.fan }} is not working"
+      - alert: cpu_increase_load
+        expr: vsphere_exporter_CpuMhz > 2000
+        for: 30s
+        labels: {severity: warning}
+        annotations:
+          summary: "CPU usage on {{ $labels.host }} has reached {{ $value }} MHz"
+      - alert: hybrid_power_supply
+        expr: vsphere_exporter_SensorInfo{state="red",name=~"Power.*"} or redfish_exporter_SensorHealth{sensor=~"PSU.*"} != 1
+        for: 30s
+        labels: {severity: critical}
+        annotations:
+          summary: "Power supply problem seen by vSphere OR Redfish"

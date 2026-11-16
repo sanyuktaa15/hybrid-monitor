@@ -1,0 +1,41 @@
+services:
+  redfish-mock:
+    build: .
+    command: python mock/redfish_mock.py
+    ports: ["8001:8001"]
+  vsphere-mock:
+    build: .
+    command: python mock/vsphere_mock.py
+    ports: ["8002:8002"]
+  redfish-exporter:
+    build: .
+    command: python exporters/redfish_exporter.py
+    environment: {REDFISH_URL: "http://redfish-mock:8001"}
+    ports: ["9141:9141"]
+    depends_on: [redfish-mock]
+  vsphere-exporter:
+    build: .
+    command: python exporters/vsphere_exporter.py
+    environment: {VSPHERE_URL: "http://vsphere-mock:8002"}
+    ports: ["9142:9142"]
+    depends_on: [vsphere-mock]
+  prometheus:
+    image: prom/prometheus:v2.40.0
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alert.rules:/etc/prometheus/alert.rules:ro
+    ports: ["9090:9090"]
+  alertmanager:
+    image: prom/alertmanager:v0.24.0
+    volumes: ["./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro"]
+    ports: ["9093:9093"]
+  mailhog:
+    image: mailhog/mailhog
+    ports: ["8025:8025"]
+  grafana:
+    image: grafana/grafana:9.2.4
+    environment: {GF_SECURITY_ADMIN_PASSWORD: admin}
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports: ["3000:3000"]
