@@ -1,5 +1,4 @@
 
-# Usage: ./demo.sh fan|temp|psu|vm|reset
 case "$1" in
   fan)   curl -s -XPOST localhost:8001/sim/fan_fail ;;
   temp)  curl -s -XPOST localhost:8001/sim/temp_spike ;;
